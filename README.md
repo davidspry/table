@@ -47,24 +47,19 @@ table.set_size(3, 3);
 //  | _ | _ | 0 |
 
 // 5. Safely access table cells
-
 assert(table.get(0, 2) == nullptr);
 assert(table.at_else(0, 0, -1) ==  4);
 assert(table.at_else(0, 2, -1) == -1);
 
 // 6. Erase elements by grid position
-
 table.erase(1, 1);
 
 //  | 4 | _ | _ |
 //  | _ | _ | _ |
 //  | _ | _ | 0 |
 
-/* Iterate over data items */
-
+// 7. Iterate over data items
 for (auto & item : table) {
-  /* item in {0, 4} */
+  assert(item == 0 || item == 4);
 }
-
-
 ```
