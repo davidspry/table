@@ -1,4 +1,4 @@
-//! @file main.cpp
+//! @file test.cpp
 //! @date 15/9/21
 //! @brief Tests for the `ds::table<T>` type.
 //! @author David Spry
@@ -17,7 +17,6 @@ struct noncopyable {
     noncopyable& operator=(noncopyable const&) = delete;
     noncopyable& operator=(noncopyable&&) noexcept = default;
 };
-
 }
 
 TEST(Table, DefaultConstructor) {
@@ -250,6 +249,13 @@ TEST(Table, SetSize) {
 
     EXPECT_EQ(table.count(), 1);
     EXPECT_EQ(table.at(0, 0), 0);
+
+    EXPECT_NO_THROW(table.set_size(1, 1));
+    EXPECT_NO_THROW(table.set_size(50, 50));
+    EXPECT_NO_THROW(table.set_size(20, 20));
+    EXPECT_NO_THROW(table.set_size(50, 50));
+    EXPECT_NO_THROW(table.set_size(10, 10));
+    EXPECT_NO_THROW(table.set_size(0, 0));
 }
 
 int main(int argc, char* argv[]) {
