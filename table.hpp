@@ -74,9 +74,9 @@ public:
     /// if the given position is out of range.
 
     inline T& at(index const row, index const column) noexcept(false) {
-        auto const i = get_table_index(row, column);
-        auto const n = table_indices.at(i);
-        return cells.at(n);
+        auto const t = get_table_index(row, column);
+        auto const i = table_indices.at(t);
+        return cells.at(i);
     }
 
     /// @brief Read the table cell at the given position.
@@ -86,9 +86,9 @@ public:
     /// if the given position is out of range.
 
     inline T const& at(index const row, index const column) const noexcept(false) {
-        auto const i = get_table_index(row, column);
-        auto const n = table_indices.at(i);
-        return cells.at(n);
+        auto const t = get_table_index(row, column);
+        auto const i = table_indices.at(t);
+        return cells.at(i);
     }
 
     /// @brief Try to read the table cell at the given position but return the given fallback element if it's empty.
@@ -98,11 +98,10 @@ public:
     /// @throw An exception will be thrown if the given position is out of range.
 
     inline T& at_else(index const row, index const column, T& otherwise) noexcept(false) {
-        if (!contains(row, column)) {
-            return otherwise;
-        }
-
-        return at(row, column);
+        auto const t = get_table_index(row, column);
+        auto const i = table_indices.at(t);
+        if (i == none) return otherwise;
+        return cells.at(i);
     }
 
     /// @brief Try to read the table cell at the given position but return the given fallback element if it's empty.
@@ -122,11 +121,10 @@ public:
     /// @throw An exception will be thrown if the given position is out of range.
 
     inline T const& at_else(index const row, index const column, T const& otherwise) const noexcept(false) {
-        if (!contains(row, column)) {
-            return otherwise;
-        }
-
-        return at(row, column);
+        auto const t = get_table_index(row, column);
+        auto const i = table_indices.at(t);
+        if (i == none) return otherwise;
+        return cells.at(i);
     }
 
     /// @brief Get a pointer to the contents of the table cell at the given position.
@@ -158,8 +156,8 @@ public:
     /// @param column The column index of the desired table cell.
 
     [[nodiscard]] inline bool contains(index const row, index const column) const noexcept {
-        auto const i = get_table_index(row, column);
-        return table_indices.at(i) != none;
+        auto const t = get_table_index(row, column);
+        return table_indices.at(t) != none;
     }
 
 public:
