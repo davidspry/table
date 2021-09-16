@@ -225,7 +225,7 @@ public:
     /// @note The amount of time required is linear in the number of data items,
     /// but the number of items that are copied is bounded by the given dimensions.
 
-    void set_size(dim_t const number_of_rows, dim_t const number_of_columns) noexcept(false) {
+    void set_size(dim_t const number_of_rows, dim_t const number_of_columns) {
         ds::table<T> new_table(number_of_rows, number_of_columns);
 
         for (auto i = 0; i < cells_indices.size(); ++i) {
