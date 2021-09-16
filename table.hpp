@@ -177,16 +177,16 @@ public:
     /// @param element The element that should be copied into the table cell.
 
     inline T& set(index const row, index const column, T const& element) noexcept(false) {
-        auto const i = get_table_index(row, column);
+        auto const t = get_table_index(row, column);
         auto const n = static_cast<int>(cells.size());
 
-        if (contains(row, column)) {
-            return modify(table_indices.at(i), element);
+        if (contains(t)) {
+            return modify(table_indices.at(t), element);
         }
 
         cells.push_back(element);
-        cells_indices.push_back(i);
-        table_indices.at(i) = n;
+        cells_indices.push_back(t);
+        table_indices.at(t) = n;
 
         return cells.back();
     }
@@ -198,16 +198,16 @@ public:
 
     template <typename ...K>
     inline T& emplace(index const row, index const column, K&& ... parameters) noexcept(false) {
-        auto const i = get_table_index(row, column);
+        auto const t = get_table_index(row, column);
         auto const n = static_cast<int>(cells.size());
 
-        if (contains(row, column)) {
-            return modify(table_indices.at(i), T(std::forward<K>(parameters)...));
+        if (contains(t)) {
+            return modify(table_indices.at(t), T(std::forward<K>(parameters)...));
         }
 
         cells.emplace_back(parameters...);
-        cells_indices.push_back(i);
-        table_indices.at(i) = n;
+        cells_indices.push_back(t);
+        table_indices.at(t) = n;
 
         return cells.back();
     }
