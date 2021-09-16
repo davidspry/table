@@ -284,6 +284,14 @@ private:
         return row * cols + column;
     }
 
+    /// @brief Indicate whether the element at the given 1d table index is `none` or not.
+    /// @param table_index The 1d index of the desired element.
+    /// @return Whether the specified element is a cell (`true`) or `none` (`false`).
+
+    [[nodiscard]] inline bool contains(index const table_index) const noexcept {
+        return table_indices.at(table_index) != none;
+    }
+
     /// @brief Set the value of the `cells` element with the given index.
     /// @param cells_index The index of the element to be modified.
     /// @param new_value The new value to be set.
