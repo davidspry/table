@@ -137,11 +137,7 @@ public:
     inline T* get(index const row, index const column) {
         auto const t = get_table_index(row, column);
         auto const i = table_indices.at(t);
-
-        if (i == none) {
-            return nullptr;
-        }
-
+        if (i == none) return nullptr;
         return & (cells.at(i));
     }
 
@@ -153,11 +149,7 @@ public:
     inline T const* get(index const row, index const column) const {
         auto const t = get_table_index(row, column);
         auto const i = table_indices.at(t);
-
-        if (i == none) {
-            return nullptr;
-        }
-
+        if (i == none) return nullptr;
         return & (cells.at(i));
     }
 
