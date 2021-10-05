@@ -15,7 +15,8 @@ namespace ds {
 using index = int;
 using dim_t = unsigned int;
 
-/// @class An array type that provides a virtual grid topology.
+/// @class Table
+/// @brief An array type that provides a virtual grid topology.
 
 template <typename T>
 class table {
