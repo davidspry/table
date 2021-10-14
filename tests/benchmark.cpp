@@ -102,6 +102,12 @@ BENCHMARK_TEMPLATE_F(TableFixture, BM_EraseAndEmplace, int)(benchmark::State& st
     }
 }
 
+BENCHMARK_TEMPLATE_F(TableFixture, BM_Reset, int)(benchmark::State& state) {
+    for (auto _: state) {
+        reset();
+    }
+}
+
 BENCHMARK_TEMPLATE_F(TableFixture, BM_SetSize, int)(benchmark::State& state) {
     for (auto _: state) {
         ds::dim_t const r = rand_int(Rows, Rows << 6);

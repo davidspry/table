@@ -122,7 +122,7 @@ TEST(Table, Get) {
     int& value = table.emplace(2, 2, 5);
     int* point = table.get(2, 2);
 
-    EXPECT_EQ(& value, point);
+    EXPECT_EQ(&value, point);
     EXPECT_NO_THROW(immutable.get(0, 0));
 }
 
@@ -174,9 +174,35 @@ TEST(Table, Erase) {
     EXPECT_TRUE(table.empty());
 }
 
+TEST(Table, Reset) {
+    ds::dim_t const rows = 10;
+    ds::dim_t const cols = 5;
+    ds::table<int> table(rows, cols);
+
+    for (auto row = 0; row < rows; ++row) {
+        for (auto col = 0; col < cols; ++col) {
+            table.emplace(row, col, 1 + row * 6 + col);
+        }
+    }
+
+    ASSERT_EQ(table.count(), rows * cols);
+
+    table.reset();
+    EXPECT_EQ(table.count(), 0);
+    EXPECT_EQ(table.dimensions(), std::pair(rows, cols));
+
+    table.set_size(rows * 2, cols * 2);
+    table.emplace(0, 0, 5);
+    ASSERT_EQ(table.count(), 1);
+
+    table.reset();
+    EXPECT_EQ(table.count(), 0);
+    EXPECT_EQ(table.dimensions(), std::pair(rows * 2, cols * 2));
+}
+
 TEST(Table, SetSize) {
-    auto rows = 10;
-    auto cols = 10;
+    ds::dim_t rows = 10;
+    ds::dim_t cols = 10;
     ds::table<int> table(rows, rows);
 
     auto const for_each = [&](auto const& task) {
@@ -193,12 +219,14 @@ TEST(Table, SetSize) {
     });
 
     ASSERT_EQ(table.count(), rows * cols);
+    EXPECT_EQ(table.dimensions(), std::pair(rows, cols));
 
     rows = rows + 1;
     cols = cols + 1;
     table.set_size(rows, cols);
 
     EXPECT_EQ(table.count(), (rows - 1) * (cols - 1));
+    EXPECT_EQ(table.dimensions(), std::pair(rows, cols));
 
     for_each([&](int const row, int const col) {
         if (row == rows - 1 || col == cols - 1)
@@ -214,6 +242,7 @@ TEST(Table, SetSize) {
     table.set_size(rows, cols);
 
     EXPECT_EQ(table.count(), rows * cols);
+    EXPECT_EQ(table.dimensions(), std::pair(rows, cols));
 
     for_each([&](int const row, int const col) {
         EXPECT_EQ(table.at(row, col), row * (cols << 1) + col);
@@ -224,6 +253,7 @@ TEST(Table, SetSize) {
     table.set_size(rows, cols);
 
     EXPECT_EQ(table.count(), (rows * cols) >> 6);
+    EXPECT_EQ(table.dimensions(), std::pair(rows, cols));
 
     for_each([&](int const row, int const col) {
         int const r = rows >> 3;
@@ -244,11 +274,14 @@ TEST(Table, SetSize) {
     });
 
     ASSERT_EQ(table.count(), rows * cols);
+    EXPECT_EQ(table.dimensions(), std::pair(rows, cols));
 
     table.set_size(1, 1);
 
     EXPECT_EQ(table.count(), 1);
     EXPECT_EQ(table.at(0, 0), 0);
+    EXPECT_EQ(table.dimensions().first, 1);
+    EXPECT_EQ(table.dimensions().second, 1);
 
     EXPECT_NO_THROW(table.set_size(1, 1));
     EXPECT_NO_THROW(table.set_size(50, 50));
@@ -259,7 +292,7 @@ TEST(Table, SetSize) {
 }
 
 int main(int argc, char* argv[]) {
-    ::testing::InitGoogleTest(& argc, argv);
+    ::testing::InitGoogleTest(&argc, argv);
 
     return RUN_ALL_TESTS();
 }
