@@ -7,7 +7,7 @@
 #include <functional>
 #include <gtest/gtest.h>
 
-#include "../table.hpp"
+#include "../include/table.hpp"
 
 namespace ds {
 struct noncopyable {

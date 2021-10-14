@@ -6,7 +6,7 @@
 #include <random>
 #include <benchmark/benchmark.h>
 
-#include "../table.hpp"
+#include "../include/table.hpp"
 
 constexpr static int Rows = 10;
 constexpr static int Cols = 10;

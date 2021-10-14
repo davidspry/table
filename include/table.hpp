@@ -1,6 +1,6 @@
 //! @file table.hpp
 //! @date 15/9/21
-//! @brief The ds::table<T> class.
+//! @brief The `ds::table<T>` class.
 //! @author David Spry
 
 #ifndef TABLE_HPP
@@ -216,6 +216,12 @@ public:
         if (updatable != none) {
             table_indices.at(updatable) = cells_index;
         }
+    }
+
+    /// @brief Reset the state of the table at the current size.
+
+    inline void reset() {
+        *this = table<T>(rows, cols);
     }
 
 public:
