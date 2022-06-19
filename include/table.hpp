@@ -1,29 +1,23 @@
-//! @file table.hpp
-//! @date 15/9/21
-//! @brief The `ds::table<T>` class.
-//! @author David Spry
-
 #ifndef TABLE_HPP
 #define TABLE_HPP
 
 #include <vector>
+#include <cstddef>
+#include <climits>
 #include <utility>
 #include <algorithm>
 
 namespace ds {
 
-using index = int;
-using dim_t = unsigned int;
-
 /// @class Table
 /// @brief An array type that provides a virtual grid topology.
 
-template <typename T>
+template<typename value_type>
 class table {
 public:
     /// @brief Construct an empty table.
 
-    table() :
+    table():
             rows(default_size),
             cols(default_size) {
         table_indices.assign(rows * cols, none);
@@ -33,7 +27,7 @@ public:
     /// @param number_of_rows The desired number of rows.
     /// @param number_of_cols The desired number of columns.
 
-    table(dim_t const number_of_rows, dim_t const number_of_cols) :
+    table(std::size_t number_of_rows, std::size_t number_of_cols):
             rows(number_of_rows),
             cols(number_of_cols) {
         table_indices.assign(rows * cols, none);
@@ -43,131 +37,116 @@ public:
     /// @brief Get the total number of cells of the table.
     /// @return The size of the table, rows * cols.
 
-    [[nodiscard]] inline int size() const noexcept {
+    [[nodiscard]]
+    inline int size() const noexcept {
         return rows * cols;
     }
 
     /// @brief Get the dimensions of the table.
     /// @return The dimensions of the table, (rows, cols).
 
-    [[nodiscard]] inline std::pair<dim_t, dim_t> dimensions() const noexcept {
+    [[nodiscard]]
+    inline std::pair<std::size_t, std::size_t> dimensions() const noexcept {
         return {rows, cols};
     }
 
     /// @brief Get the number of data items stored in the table.
     /// @return The number of data items stored in the table.
 
-    [[nodiscard]] inline int count() const noexcept {
+    [[nodiscard]]
+    inline auto count() const noexcept {
         return cells.size();
     }
 
     /// @brief Indicate whether the table contains any data items or not.
     /// @return Whether the table is empty or not.
 
-    [[nodiscard]] inline int empty() const noexcept {
+    [[nodiscard]]
+    inline bool empty() const noexcept {
         return cells.empty();
     }
 
     /// @brief Read the table cell at the given position.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
-    /// @throw An exception will be thrown if the table cell is empty or
-    /// if the given position is out of range.
+    /// @param row The row int of the desired table cell.
+    /// @param column The column int of the desired table cell.
 
-    inline T& at(index const row, index const column) noexcept(false) {
+    inline value_type& at(int row, int column) noexcept(false) {
         auto const t = get_table_index(row, column);
         auto const i = table_indices.at(t);
         return cells.at(i);
     }
 
     /// @brief Read the table cell at the given position.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
-    /// @throw An exception will be thrown if the table cell is empty or
-    /// if the given position is out of range.
+    /// @param row The row int of the desired table cell.
+    /// @param column The column int of the desired table cell.
 
-    inline T const& at(index const row, index const column) const noexcept(false) {
+    inline value_type const& at(int row, int column) const noexcept(false) {
         auto const t = get_table_index(row, column);
         auto const i = table_indices.at(t);
         return cells.at(i);
     }
 
     /// @brief Try to read the table cell at the given position but return the given fallback element if it's empty.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
+    /// @param row The row int of the desired table cell.
+    /// @param column The column int of the desired table cell.
     /// @param otherwise The fallback element to return if the requested cell is empty.
-    /// @throw An exception will be thrown if the given position is out of range.
 
-    inline T& at_else(index const row, index const column, T& otherwise) noexcept(false) {
+    inline value_type& at_else(int row, int column, value_type& otherwise) noexcept(false) {
         auto const t = get_table_index(row, column);
         auto const i = table_indices.at(t);
-        if (i == none) return otherwise;
-        return cells.at(i);
+        return (i == none) ? otherwise : cells.at(i);
     }
 
     /// @brief Try to read the table cell at the given position but return the given fallback element if it's empty.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
+    /// @param row The row int of the desired table cell.
+    /// @param column The column int of the desired table cell.
     /// @param otherwise The fallback element to return if the requested cell is empty.
-    /// @throw An exception will be thrown if the given position is out of range.
 
-    inline T& at_else(index const row, index const column, T&& otherwise) noexcept(false) {
-        return at_else(row, column, otherwise);
-    }
-
-    /// @brief Try to read the table cell at the given position but return the given fallback element if it's empty.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
-    /// @param otherwise The fallback element to return if the requested cell is empty.
-    /// @throw An exception will be thrown if the given position is out of range.
-
-    inline T const& at_else(index const row, index const column, T const& otherwise) const noexcept(false) {
+    inline value_type const& at_else(int row, int column, value_type const& otherwise) const noexcept(false) {
         auto const t = get_table_index(row, column);
         auto const i = table_indices.at(t);
-        if (i == none) return otherwise;
-        return cells.at(i);
+        return (i == none) ? otherwise : cells.at(i);
     }
 
     /// @brief Get a pointer to the contents of the table cell at the given position.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
+    /// @param row The row int of the desired table cell.
+    /// @param column The column int of the desired table cell.
     /// @return A pointer to the underlying contents of the table cell or `nullptr` if the cell is empty.
 
-    inline T* get(index const row, index const column) {
+    inline value_type* get(int row, int column) {
         auto const t = get_table_index(row, column);
         auto const i = table_indices.at(t);
-        if (i == none) return nullptr;
-        return & (cells.at(i));
+        return (i == none) ? nullptr : &(cells.at(i));
     }
 
     /// @brief Get a pointer to the contents of the table cell at the given position.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
+    /// @param row The row int of the desired table cell.
+    /// @param column The column int of the desired table cell.
     /// @return A pointer to the underlying contents of the table cell or `nullptr` if the cell is empty.
 
-    inline T const* get(index const row, index const column) const {
+    inline value_type const* get(int row, int column) const {
         auto const t = get_table_index(row, column);
         auto const i = table_indices.at(t);
-        if (i == none) return nullptr;
-        return & (cells.at(i));
+        return (i == none) ? nullptr : &(cells.at(i));
     }
 
     /// @brief Indicate whether the table cell at the given position contains an element or not.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
+    /// @param row The row int of the desired table cell.
+    /// @param column The column int of the desired table cell.
 
-    [[nodiscard]] inline bool contains(index const row, index const column) const noexcept {
+    [[nodiscard]]
+    inline bool contains(int row, int column) const noexcept {
         auto const t = get_table_index(row, column);
         return table_indices.at(t) != none;
     }
 
 public:
     /// @brief Set the value of the table cell with the given position.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
+    /// @param row The row int of the desired table cell.
+    /// @param column The column int of the desired table cell.
     /// @param element The element that should be copied into the table cell.
 
-    inline T& set(index const row, index const column, T const& element) noexcept(false) {
+    inline value_type& set(int row, int column, value_type element) noexcept(false) {
         auto const t = get_table_index(row, column);
         auto const n = static_cast<int>(cells.size());
 
@@ -183,20 +162,20 @@ public:
     }
 
     /// @brief Set the value of the table cell at the given position.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
-    /// @param parameters The parameters that should be used to construct the new data item.
+    /// @param row The row int of the desired table cell.
+    /// @param column The column int of the desired table cell.
+    /// @param arguments The parameters that should be used to construct the new data item.
 
-    template <typename ...K>
-    inline T& emplace(index const row, index const column, K&& ... parameters) noexcept(false) {
+    template<typename ...Arguments>
+    inline value_type& emplace(int row, int column, Arguments&& ... arguments) noexcept(false) {
         auto const t = get_table_index(row, column);
         auto const n = static_cast<int>(cells.size());
 
         if (contains(t)) {
-            return modify(table_indices.at(t), T(std::forward<K>(parameters)...));
+            return modify(table_indices.at(t), value_type(std::forward<Arguments>(arguments)...));
         }
 
-        cells.emplace_back(parameters...);
+        cells.emplace_back(arguments...);
         cells_indices.push_back(t);
         table_indices.at(t) = n;
 
@@ -204,24 +183,24 @@ public:
     }
 
     /// @brief Erase the contents of the table cell at the given position.
-    /// @param row The row index of the desired table cell.
-    /// @param column The column index of the desired table cell.
+    /// @param row The row int of the desired table cell.
+    /// @param column The column int of the desired table cell.
 
-    inline void erase(index const row, index const column) noexcept(false) {
-        auto const table_index = get_table_index(row, column);
-        auto const cells_index = table_indices.at(table_index);
-        auto const updatable = swap_and_erase(cells_index);
-        table_indices.at(table_index) = none;
+    inline void erase(int const row, int const column) noexcept(false) {
+        auto const table_int = get_table_index(row, column);
+        auto const cells_int = table_indices.at(table_int);
+        auto const updatable = swap_and_erase(cells_int);
+        table_indices.at(table_int) = none;
 
         if (updatable != none) {
-            table_indices.at(updatable) = cells_index;
+            table_indices.at(updatable) = cells_int;
         }
     }
 
     /// @brief Reset the state of the table at the current size.
 
     inline void reset() {
-        *this = table<T>(rows, cols);
+        *this = table<value_type>(rows, cols);
     }
 
 public:
@@ -232,8 +211,8 @@ public:
     /// @note The amount of time required is linear in the number of data items,
     /// but the number of items that are copied is bounded by the given dimensions.
 
-    void set_size(dim_t const number_of_rows, dim_t const number_of_columns) {
-        ds::table<T> new_table(number_of_rows, number_of_columns);
+    void set_size(std::size_t const number_of_rows, std::size_t const number_of_columns) {
+        ds::table<value_type> new_table(number_of_rows, number_of_columns);
 
         for (auto i = 0; i < cells_indices.size(); ++i) {
             auto const& index = cells_indices.at(i);
@@ -247,7 +226,7 @@ public:
             }
         }
 
-        * this = std::move(new_table);
+        *this = std::move(new_table);
     }
 
 public:
@@ -277,7 +256,8 @@ private:
     /// @param row The row index of the desired table cell.
     /// @param column The column index of the desired table cell.
 
-    [[nodiscard]] inline index get_table_index(index const row, index const column) const noexcept {
+    [[nodiscard]]
+    inline int get_table_index(int const row, int const column) const noexcept {
         return row * cols + column;
     }
 
@@ -285,7 +265,8 @@ private:
     /// @param table_index The 1d index of the desired element.
     /// @return Whether the specified element is a cell (`true`) or `none` (`false`).
 
-    [[nodiscard]] inline bool contains(index const table_index) const noexcept {
+    [[nodiscard]]
+    inline bool contains(int const table_index) const noexcept(false) {
         return table_indices.at(table_index) != none;
     }
 
@@ -293,18 +274,9 @@ private:
     /// @param cells_index The index of the element to be modified.
     /// @param new_value The new value to be set.
 
-    inline T& modify(index const cells_index, T const& new_value) noexcept(false) {
-        cells.at(cells_index) = new_value;
-        return cells.at(cells_index);
-    }
-
-    /// @brief Set the value of the `cells` element with the given index.
-    /// @param cells_index The index of the element to be modified.
-    /// @param new_value The new value to be set.
-
-    inline T& modify(index const cells_index, T&& new_value) noexcept(false) {
+    inline value_type& modify(int const cells_index, value_type new_value) noexcept(false) {
         cells.at(cells_index) = std::move(new_value);
-        return cells.at(cells_index);
+        return cells[cells_index];
     }
 
     /// @brief Swap the element at the given index with the last element in the
@@ -312,8 +284,8 @@ private:
     /// @param container The container from which the selected element should be erased.
     /// @param container_index The index of the element to be erased from the container.
 
-    template <typename K>
-    inline void swap_and_erase(std::vector<K>& container, index const container_index) {
+    template<typename K>
+    inline void swap_and_erase(std::vector<K>& container, int const container_index) {
         auto a = container.data() + container_index;
         auto b = container.end() - 1;
         std::iter_swap(a, b);
@@ -326,7 +298,7 @@ private:
     /// and `cells_indices` containers.
     /// @return The table index of the element that was swapped into the position with the given index.
 
-    inline index swap_and_erase(index const cells_index) {
+    inline int swap_and_erase(int const cells_index) {
         swap_and_erase(cells_indices, cells_index);
         swap_and_erase(cells, cells_index);
 
@@ -336,29 +308,29 @@ private:
 public:
     /// @brief The default number of rows and columns.
 
-    dim_t constexpr static default_size = 4;
+    std::size_t static constexpr default_size {4};
 
 private:
     /// @brief The data items that comprise the table's contents.
 
-    std::vector<T> cells;
+    std::vector<value_type> cells;
 
     /// @brief The table indices that correspond to the data items in the `cells` array.
     /// @example `cells_indices.at(i)` maps the element `cells.at(i)` to a position in the `table_indices` array.
 
-    std::vector<index> cells_indices;
+    std::vector<int> cells_indices;
 
     /// @brief A lookup table of indices to table cells, which may contain `none` elements.
 
-    std::vector<index> table_indices;
+    std::vector<int> table_indices;
 
 private:
-    dim_t rows;
-    dim_t cols;
+    std::size_t rows;
+    std::size_t cols;
 
     /// @brief The value reserved to represent the absence of data in the table.
 
-    index constexpr inline static none {-INT_MAX};
+    auto inline static constexpr none {-INT_MAX};
 };
 
 }

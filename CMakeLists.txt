@@ -1,13 +1,10 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.14)
 project(Table)
 
+set(TARGET "table")
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED)
 
-# Add tests
 add_subdirectory(tests)
-
-# Establish a header-only library
-add_library(${PROJECT_NAME} INTERFACE)
-
-# Include the header
-target_include_directories(${PROJECT_NAME} INTERFACE include)
+add_library(${TARGET} INTERFACE)
+target_include_directories(${TARGET} INTERFACE include)

@@ -4,6 +4,7 @@
 //! @author David Spry
 
 #include <random>
+#include <vector>
 #include <functional>
 #include <gtest/gtest.h>
 
@@ -28,8 +29,8 @@ TEST(Table, DefaultConstructor) {
 }
 
 TEST(Table, NonDefaultConstructor) {
-    ds::dim_t const rows = 5;
-    ds::dim_t const cols = 10;
+    std::size_t const rows = 5;
+    std::size_t const cols = 10;
     ds::table<int> table(rows, cols);
 
     EXPECT_EQ(table.count(), 0);
@@ -53,32 +54,39 @@ TEST(Table, SetItemCopyable) {
     EXPECT_EQ(table.at(0, 1), 2);
 }
 
-TEST(Table, EmplaceItemCopyable) {
-    ds::table<int> table;
+TEST(Table, EmplaceItem) {
+    using element_type = std::vector<int>;
+    ds::table<element_type> table;
 
-    int& a = table.emplace(0, 0, 5);
+    /* Emplace new element */
+    table.emplace(0, 0, 1, 1);
     EXPECT_EQ(table.count(), 1);
-    EXPECT_EQ(table.at(0, 0), 5);
+    EXPECT_EQ(table.at(0, 0), element_type(1, 1));
 
-    int& b = table.emplace(0, 0, 2);
-    EXPECT_EQ(table.count(), 1);
-    EXPECT_EQ(table.at(0, 0), 2);
-
-    int& c = table.emplace(0, 1, -5);
+    /* Emplace new element */
+    table.emplace(0, 1, 2, 1);
     EXPECT_EQ(table.count(), 2);
-    EXPECT_EQ(table.at(0, 1), -5);
+    EXPECT_EQ(table.at(0, 1), element_type(2, 1));
+
+    /* Replace existing element */
+    table.emplace(0, 0, 3, 1);
+    EXPECT_EQ(table.count(), 2);
+    EXPECT_EQ(table.at(0, 0), element_type(3, 1));
 }
 
-TEST(Table, EmplaceItemNoncopyable) {
+TEST(Table, EmplaceNoncopyableItem) {
     ds::table<ds::noncopyable> table;
 
+    /* Emplace new element */
     table.emplace(0, 0);
     EXPECT_EQ(table.count(), 1);
 
-    table.emplace(0, 0);
-    EXPECT_EQ(table.count(), 1);
-
+    /* Emplace new element */
     table.emplace(0, 1);
+    EXPECT_EQ(table.count(), 2);
+
+    /* Replace existing element */
+    table.emplace(0, 0);
     EXPECT_EQ(table.count(), 2);
 }
 
@@ -97,11 +105,16 @@ TEST(Table, At) {
 }
 
 TEST(Table, AtElse) {
-    ds::table<int> table;
+    ds::table<int> table {3, 3};
 
+    auto value = 10;
     auto fallback = 100;
+    table.set(2, 2, value);
+
+    EXPECT_NO_THROW(table.at(2, 2));
     EXPECT_ANY_THROW(table.at(0, 0));
-    EXPECT_EQ(table.at_else(0, 0, 5), 5);
+    EXPECT_EQ(table.at_else(2, 2, fallback), value);
+    EXPECT_EQ(table.at_else(0, 0, fallback), fallback);
 
     auto& mutable_ref = fallback;
     EXPECT_ANY_THROW(table.at(0, 1));
@@ -114,35 +127,39 @@ TEST(Table, AtElse) {
 
 TEST(Table, Get) {
     ds::table<int> table;
-    ds::table<int> const immutable;
 
-    EXPECT_EQ(table.get(0, 0), nullptr);
     ASSERT_TRUE(table.empty());
+    EXPECT_EQ(table.get(0, 0), nullptr);
 
-    int& value = table.emplace(2, 2, 5);
-    int* point = table.get(2, 2);
+    auto& a = table.emplace(2, 2, 5);
+    auto* b = table.get(2, 2);
 
-    EXPECT_EQ(&value, point);
-    EXPECT_NO_THROW(immutable.get(0, 0));
+    EXPECT_EQ(&a, b);
 }
 
 TEST(Table, Contains) {
-    ds::table<int> table(10, 10);
+    auto runs = 96;
+    auto size = std::size_t {10};
+
+    ds::table<int> table(size, size);
 
     std::random_device device;
     std::mt19937 mersenne(device());
-    std::uniform_int_distribution<int> randInt(0, 9);
+    std::uniform_int_distribution<int> randInt(0, size - 1);
 
-    for (auto i = 0; i < 50; ++i) {
-        int const row = randInt(mersenne);
-        int const col = randInt(mersenne);
+    auto value {2};
+    auto error {8};
+
+    for (auto _ = 0; _ < runs; ++_) {
+        auto const row = randInt(mersenne);
+        auto const col = randInt(mersenne);
 
         if (table.contains(row, col)) {
-            EXPECT_NE(table.at_else(row, col, 5), 5);
+            EXPECT_NE(table.at_else(row, col, error), error);
             continue;
         }
 
-        table.emplace(row, col, 1);
+        table.emplace(row, col, value);
         EXPECT_TRUE(table.contains(row, col));
     }
 }
@@ -175,8 +192,8 @@ TEST(Table, Erase) {
 }
 
 TEST(Table, Reset) {
-    ds::dim_t const rows = 10;
-    ds::dim_t const cols = 5;
+    std::size_t const rows = 10;
+    std::size_t const cols = 5;
     ds::table<int> table(rows, cols);
 
     for (auto row = 0; row < rows; ++row) {
@@ -201,8 +218,8 @@ TEST(Table, Reset) {
 }
 
 TEST(Table, SetSize) {
-    ds::dim_t rows = 10;
-    ds::dim_t cols = 10;
+    std::size_t rows = 10;
+    std::size_t cols = 10;
     ds::table<int> table(rows, rows);
 
     auto const for_each = [&](auto const& task) {
@@ -255,9 +272,9 @@ TEST(Table, SetSize) {
     EXPECT_EQ(table.count(), (rows * cols) >> 6);
     EXPECT_EQ(table.dimensions(), std::pair(rows, cols));
 
-    for_each([&](int const row, int const col) {
-        int const r = rows >> 3;
-        int const c = cols >> 3;
+    for_each([&](unsigned int const row, unsigned int const col) {
+        auto const r = rows >> 3;
+        auto const c = cols >> 3;
         if (row < r && col < c)
             EXPECT_EQ(table.at(row, col), row * (c << 1) + col);
         else
